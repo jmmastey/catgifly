@@ -14,7 +14,8 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
-  var current_cats = [];
+  var limit         = 100;
+  var current_cats  = [];
   var processResult = function(res) {
     if(!/imgur.com/.test(res.data.url)) { return '' }
     return res.data.url
@@ -24,7 +25,7 @@ if (Meteor.isServer) {
   }
 
   var reloadCats = function() {
-    Reddit.r('catgifs').hot().limit(20, function(err, data, res) {
+    Reddit.r('catgifs').hot().limit(limit, function(err, data, res) {
       current_cats = data.data.children.map(processResult)
                       .filter(function(img) { return img != '' })
     });
