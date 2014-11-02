@@ -1,27 +1,45 @@
 if (Meteor.isClient) {
-  // counter starts at 0
-  Session.setDefault("counter", 0);
+  Session.setDefault("cat_src", "http://i.imgur.com/Fj0JIOl.gif");
 
-  Template.hello.helpers({
-    counter: function () {
-      return Session.get("counter");
-    }
+  Template.cat_gif.helpers({
+    src: function() { return Session.get("cat_src") }
   });
 
-  Template.hello.events({
-    'click button': function () {
-      // increment the counter when button is clicked
-      Session.set("counter", Session.get("counter") + 1);
+  Template.cat_switcher.events({
+    "submit .switcher": function(event) {
+      Meteor.call("getNewCat", function(err, res) { Session.set("cat_src", res) });
+      return false;
     }
   });
 }
 
 if (Meteor.isServer) {
-  Reddit.r('catgif').hot(function(err, data, res) {
-    console.log(data.data.children[0].data.url)
-  });
+  var current_cats = [];
+  var processResult = function(res) {
+    if(!/imgur.com/.test(res.data.url)) { return '' }
+    return res.data.url
+               .replace('http://imgur.com', 'http://i.imgur.com')
+               .replace('gallery/', '')
+               .replace(/(.gif)?$/, '.gif')
+  }
 
-  Meteor.startup(function () {
-    // code to run on server at startup
-  });
+  var reloadCats = function() {
+    Reddit.r('catgifs').hot().limit(20, function(err, data, res) {
+      current_cats = data.data.children.map(processResult)
+                      .filter(function(img) { return img != '' })
+    });
+  };
+
+  Meteor.startup(function() {
+    reloadCats();
+
+    Meteor.methods({
+      getNewCat: function() {
+        if(Math.random() < 0.1) { reloadCats(); } // occasionally reload...
+
+        var idx = Math.floor(Math.random() * current_cats.length)
+        return current_cats[idx]
+      },
+    });
+  })
 }

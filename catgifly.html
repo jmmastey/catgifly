@@ -5,9 +5,13 @@
 <body>
   <h1>Top Cat GIFs</h1>
 
+  {{> cat_gif}}
   {{> cat_switcher}}
 </body>
 
+<template name="cat_gif">
+  <img src="{{src}}" />
+</template>
 <template name="cat_switcher">
-  <button>Next Cat GIF</button>
+  <form class='switcher'><button>Next Cat GIF</button></form>
 </template>
